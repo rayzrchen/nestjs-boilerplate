@@ -1,0 +1,175 @@
+import * as request from 'supertest';
+import {
+  APP_URL,
+  MAIL_HOST,
+  MAIL_PORT,
+  PREFIX,
+  TESTER_EMAIL,
+  TESTER_PASSWORD,
+} from '../utils/constants';
+
+describe('Auth user (e2e)', () => {
+  const app = APP_URL + PREFIX;
+  const mail = `http://${MAIL_HOST}:${MAIL_PORT}`;
+  const newUserFirstName = `Tester${Date.now()}`;
+  const newUserLastName = `E2E`;
+  const newUserEmail = `User.${Date.now()}@example.com`;
+  const newUserPassword = `secret`;
+
+  it('Login: /auth/email/login (POST)', () => {
+    return request(app)
+      .post('/auth/email/login')
+      .send({ email: TESTER_EMAIL, password: TESTER_PASSWORD })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.token).toBeDefined();
+      });
+  });
+
+  it('Login via admin endpoint: /auth/admin/email/login (POST)', () => {
+    return request(app)
+      .post('/auth/admin/email/login')
+      .send({ email: TESTER_EMAIL, password: TESTER_PASSWORD })
+      .expect(422);
+  });
+
+  it('Login via admin endpoint with extra spaced: /auth/admin/email/login (POST)', () => {
+    return request(app)
+      .post('/auth/admin/email/login')
+      .send({ email: TESTER_EMAIL + '  ', password: TESTER_PASSWORD })
+      .expect(422);
+  });
+
+  it('Do not allow register user with exists email: /auth/email/register (POST)', () => {
+    return request(app)
+      .post('/auth/email/register')
+      .send({
+        email: TESTER_EMAIL,
+        password: TESTER_PASSWORD,
+        firstName: 'Tester',
+        lastName: 'E2E',
+      })
+      .expect(422)
+      .expect(({ body }) => {
+        expect(body.errors.email).toBeDefined();
+      });
+  });
+
+  it('Register new user: /auth/email/register (POST)', async () => {
+    return request(app)
+      .post('/auth/email/register')
+      .send({
+        email: newUserEmail,
+        password: newUserPassword,
+        firstName: newUserFirstName,
+        lastName: newUserLastName,
+      })
+      .expect(201);
+  });
+
+  it('Login unconfirmed user: /auth/email/login (POST)', () => {
+    return request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserPassword })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.token).toBeDefined();
+      });
+  });
+
+  it('Confirm email: /auth/email/confirm (POST)', async () => {
+    const hash = await request(mail)
+      .get('/email')
+      .then(({ body }) =>
+        body
+          .find(
+            (letter) =>
+              letter.to[0].address.toLowerCase() ===
+              newUserEmail.toLowerCase() &&
+              /.*confirm\-email\/(\w+).*/g.test(letter.text),
+          )
+          ?.text.replace(/.*confirm\-email\/(\w+).*/g, '$1'),
+      );
+
+    return request(app)
+      .post('/auth/email/confirm')
+      .send({
+        hash,
+      })
+      .expect(200);
+  });
+
+  it('Login confirmed user: /auth/email/login (POST)', () => {
+    return request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserPassword })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.token).toBeDefined();
+      });
+  });
+
+  it('New user update profile: /auth/me (PATCH)', async () => {
+    const newUserNewName = Date.now();
+    const newUserNewPassword = 'new-secret';
+    const newUserApiToken = await request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserPassword })
+      .then(({ body }) => body.token);
+
+    await request(app)
+      .patch('/auth/me')
+      .auth(newUserApiToken, {
+        type: 'bearer',
+      })
+      .send({
+        firstName: newUserNewName,
+        password: newUserNewPassword,
+      })
+      .expect(422);
+
+    await request(app)
+      .patch('/auth/me')
+      .auth(newUserApiToken, {
+        type: 'bearer',
+      })
+      .send({
+        firstName: newUserNewName,
+        password: newUserNewPassword,
+        oldPassword: newUserPassword,
+      })
+      .expect(200);
+
+    await request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserNewPassword })
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.token).toBeDefined();
+      });
+
+    await request(app)
+      .patch('/auth/me')
+      .auth(newUserApiToken, {
+        type: 'bearer',
+      })
+      .send({ password: newUserPassword, oldPassword: newUserNewPassword })
+      .expect(200);
+  });
+
+  it('New user delete profile: /auth/me (DELETE)', async () => {
+    const newUserApiToken = await request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserPassword })
+      .then(({ body }) => body.token);
+
+    await request(app).delete('/auth/me').auth(newUserApiToken, {
+      type: 'bearer',
+    });
+
+    return request(app)
+      .post('/auth/email/login')
+      .send({ email: newUserEmail, password: newUserPassword })
+      .expect(422);
+  });
+});
