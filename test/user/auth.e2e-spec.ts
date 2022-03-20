@@ -85,7 +85,7 @@ describe('Auth user (e2e)', () => {
           .find(
             (letter) =>
               letter.to[0].address.toLowerCase() ===
-              newUserEmail.toLowerCase() &&
+                newUserEmail.toLowerCase() &&
               /.*confirm\-email\/(\w+).*/g.test(letter.text),
           )
           ?.text.replace(/.*confirm\-email\/(\w+).*/g, '$1'),

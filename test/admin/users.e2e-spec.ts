@@ -1,4 +1,9 @@
-import { ADMIN_EMAIL, ADMIN_PASSWORD, APP_URL, PREFIX } from '../utils/constants';
+import {
+  ADMIN_EMAIL,
+  ADMIN_PASSWORD,
+  APP_URL,
+  PREFIX,
+} from '../utils/constants';
 import * as request from 'supertest';
 import { RoleEnum } from '../../src/roles/roles.enum';
 import { StatusEnum } from '../../src/statuses/statuses.enum';
@@ -27,7 +32,6 @@ describe('Users admin (e2e)', () => {
         newUserFirst = body.user;
       });
   });
-
 
   // it('Login via registered user: /auth/email/login (GET)', () => {
   //   return request(app)

@@ -1,8 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Request, UseGuards, } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards, } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
-import { AuthUpdateDto } from './dto/auth-update.dto';
+import { AuthStaffLoginDto } from './dto/auth-staff-login.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Auth')
@@ -13,16 +12,10 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(public service: AuthService) {}
 
-  @Post('email/login')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  public async login(@Body() loginDto: AuthEmailLoginDto) {
-    return this.service.validateLogin(loginDto, false);
-  }
-
-  @Post('admin/email/login')
-  @HttpCode(HttpStatus.OK)
-  public async adminLogin(@Body() loginDTO: AuthEmailLoginDto) {
-    return this.service.validateLogin(loginDTO, true);
+  public async login(@Body() loginDto: AuthStaffLoginDto) {
+    return this.service.validateLogin(loginDto);
   }
 
   @ApiBearerAuth()
@@ -32,5 +25,4 @@ export class AuthController {
   public async me(@Request() request) {
     return this.service.me(request.user);
   }
-
 }

@@ -1,0 +1,32 @@
+{
+  "type": "postgres",
+  "host": "localhost",
+  "port": 5432,
+  "username": "first_nest_app",
+  "password": "first_nest_app",
+  "database": "first_nest_app",
+  "synchronize": false,
+  "dropSchema": false,
+  "keepConnectionAlive": true,
+  "logging": true,
+  "entities": [
+    "C:\\sandbox\\ws\\first-nest\\src\\database/../**/*.entity{.ts,.js}"
+  ],
+  "migrations": [
+    "C:\\sandbox\\ws\\first-nest\\src\\database/migrations/**/*{.ts,.js}"
+  ],
+  "seeds": [
+    "C:\\sandbox\\ws\\first-nest\\src\\database/seeds/**/*{.ts,.js}"
+  ],
+  "factories": [
+    "C:\\sandbox\\ws\\first-nest\\src\\database/factories/**/*{.ts,.js}"
+  ],
+  "cli": {
+    "entitiesDir": "src",
+    "migrationsDir": "src/database/migrations",
+    "subscribersDir": "subscriber"
+  },
+  "extra": {
+    "max": 100
+  }
+}

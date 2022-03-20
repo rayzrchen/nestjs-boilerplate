@@ -3,13 +3,13 @@ import { IsNotEmpty, Validate } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsExist } from '../../utils/validators/is-exists.validator';
 
-export class AuthEmailLoginDto {
-  @ApiProperty({ example: 'test1@example.com' })
+export class AuthStaffLoginDto {
+  @ApiProperty()
   @Transform(({ value }) => value.toLowerCase().trim())
   @Validate(IsExist, ['User'], {
-    message: 'emailNotExists',
+    message: 'Invalid staff id',
   })
-  email: string;
+  staffId: string;
 
   @ApiProperty()
   @IsNotEmpty()
